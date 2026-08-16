@@ -1,6 +1,11 @@
 import random
 import tkinter as tk
 
+try:
+    import winsound
+except ImportError:
+    winsound = None
+
 WIDTH = 800
 HEIGHT = 600
 PLAYER_SPEED = 7
@@ -79,10 +84,27 @@ class Game:
         elif event.keysym == "space":
             self.keys.discard("shoot")
 
+    def play_sound(self, kind):
+        if winsound is None:
+            return
+
+        tones = {
+            "start": (660, 120),
+            "shoot": (740, 55),
+            "enemy_hit": (220, 55),
+            "enemy_shot": (180, 50),
+            "hit": (120, 100),
+            "game_over": (110, 220),
+        }
+        if kind in tones:
+            frequency, duration_ms = tones[kind]
+            winsound.Beep(frequency, duration_ms)
+
     def start_game(self):
         self.state["running"] = True
         self.state["game_over"] = False
         self.state["message"] = ""
+        self.play_sound("start")
 
     def restart_game(self):
         self.state.update(
@@ -105,6 +127,7 @@ class Game:
             }
         )
         self.spawn_enemies()
+        self.play_sound("start")
 
     def spawn_enemies(self):
         cols = 8 + min(2, self.state["level"] // 2)
@@ -164,6 +187,7 @@ class Game:
             self.state["running"] = False
             self.state["game_over"] = True
             self.state["message"] = "Game Over! Press R or SPACE to restart"
+            self.play_sound("game_over")
 
         self.animate_stars()
 
@@ -197,6 +221,7 @@ class Game:
                 "color": "#5af3ff",
             }
         )
+        self.play_sound("shoot")
 
     def move_bullets(self):
         alive = []
@@ -251,6 +276,7 @@ class Game:
                 "color": "#ff8b4d",
             }
         )
+        self.play_sound("enemy_shot")
 
     def update_enemy_bullets(self):
         alive = []
@@ -276,6 +302,7 @@ class Game:
                     enemy["alive"] = False
                     bullet["y"] = -100
                     self.state["score"] += 10
+                    self.play_sound("enemy_hit")
                     break
 
             if enemy["alive"]:
@@ -293,6 +320,7 @@ class Game:
                 ):
                     self.state["lives"] -= 1
                     self.state["hit_flash"] = 70
+                    self.play_sound("hit")
                     bullet["y"] = HEIGHT + 100
                     break
 

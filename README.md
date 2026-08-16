@@ -18,3 +18,4 @@ python main.py
 
 - No external image or sound assets are used.
 - All graphics are drawn directly in Python using rectangles, ovals, and polygons.
+- Simple synthesized beeps are generated with the standard Windows sound API for shoot, hit, and game-over effects.
