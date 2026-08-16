@@ -33,6 +33,7 @@ class Game:
             "enemy_step": 1.3,
             "fire_cooldown": 0,
             "enemy_shot_timer": 0,
+            "hit_flash": 0,
             "stars": [],
             "message": "Press SPACE to start",
         }
@@ -99,6 +100,7 @@ class Game:
                 "enemy_step": 1.3,
                 "fire_cooldown": 0,
                 "enemy_shot_timer": 0,
+                "hit_flash": 0,
                 "message": "",
             }
         )
@@ -144,6 +146,8 @@ class Game:
 
         if self.state["fire_cooldown"] > 0:
             self.state["fire_cooldown"] -= 1
+        if self.state["hit_flash"] > 0:
+            self.state["hit_flash"] -= 1
 
         self.move_player()
         self.move_bullets()
@@ -227,7 +231,7 @@ class Game:
             return
 
         self.state["enemy_shot_timer"] += 1
-        if self.state["enemy_shot_timer"] >= max(18, 60 - self.state["level"] * 4):
+        if self.state["enemy_shot_timer"] >= max(12, 52 - self.state["level"] * 4):
             self.fire_enemy_bullet()
             self.state["enemy_shot_timer"] = 0
 
@@ -279,16 +283,18 @@ class Game:
 
         self.state["enemies"] = remaining
 
-        for bullet in self.state["enemy_bullets"]:
-            if (
-                bullet["x"] >= self.state["player_x"] - PLAYER_WIDTH / 2
-                and bullet["x"] <= self.state["player_x"] + PLAYER_WIDTH / 2
-                and bullet["y"] >= self.state["player_y"] - PLAYER_HEIGHT / 2
-                and bullet["y"] <= self.state["player_y"] + PLAYER_HEIGHT / 2
-            ):
-                self.state["lives"] -= 1
-                bullet["y"] = HEIGHT + 100
-                break
+        if self.state["hit_flash"] <= 0:
+            for bullet in self.state["enemy_bullets"]:
+                if (
+                    bullet["x"] >= self.state["player_x"] - PLAYER_WIDTH / 2
+                    and bullet["x"] <= self.state["player_x"] + PLAYER_WIDTH / 2
+                    and bullet["y"] >= self.state["player_y"] - PLAYER_HEIGHT / 2
+                    and bullet["y"] <= self.state["player_y"] + PLAYER_HEIGHT / 2
+                ):
+                    self.state["lives"] -= 1
+                    self.state["hit_flash"] = 70
+                    bullet["y"] = HEIGHT + 100
+                    break
 
         for bullet in self.state["bullets"]:
             if bullet["y"] < -30:
@@ -324,13 +330,14 @@ class Game:
     def draw_player(self):
         x = self.state["player_x"]
         y = self.state["player_y"]
+        color = "#b3f2ff" if self.state["hit_flash"] == 0 or self.state["hit_flash"] % 10 < 5 else "#ffffff"
         self.canvas.create_polygon(
             x, y - 18,
             x - 18, y + 16,
             x - 6, y + 10,
             x + 6, y + 10,
             x + 18, y + 16,
-            fill="#b3f2ff",
+            fill=color,
             outline="#e6feff",
             width=2,
         )
