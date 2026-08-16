@@ -13,7 +13,7 @@ PLAYER_WIDTH = 36
 PLAYER_HEIGHT = 24
 PLAYER_Y = HEIGHT - 52
 BULLET_SPEED = 11
-BULLET_COOLDOWN = 80
+BULLET_COOLDOWN = 60
 ENEMY_BULLET_SPEED = 5
 STAR_COUNT = 90
 
@@ -177,6 +177,10 @@ class Game:
         if self.state["hit_flash"] > 0:
             self.state["hit_flash"] -= 1
 
+        if "shoot" in self.keys and self.state["fire_cooldown"] <= 0:
+            self.fire_player_bullet()
+            self.state["fire_cooldown"] = BULLET_COOLDOWN
+
         self.move_player()
         self.move_bullets()
         self.update_enemies()
@@ -209,10 +213,6 @@ class Game:
         if "right" in self.keys:
             self.state["player_x"] += PLAYER_SPEED
         self.state["player_x"] = max(30, min(WIDTH - 30, self.state["player_x"]))
-
-        if "shoot" in self.keys and self.state["fire_cooldown"] <= 0:
-            self.fire_player_bullet()
-            self.state["fire_cooldown"] = BULLET_COOLDOWN
 
     def fire_player_bullet(self):
         self.state["bullets"].append(
