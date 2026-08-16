@@ -13,6 +13,7 @@ PLAYER_WIDTH = 36
 PLAYER_HEIGHT = 24
 PLAYER_Y = HEIGHT - 52
 BULLET_SPEED = 11
+BULLET_COOLDOWN = 80
 ENEMY_BULLET_SPEED = 5
 STAR_COUNT = 90
 
@@ -73,6 +74,10 @@ class Game:
                 self.start_game()
             elif self.state["game_over"]:
                 self.restart_game()
+
+            if self.state["running"] and self.state["fire_cooldown"] <= 0:
+                self.fire_player_bullet()
+                self.state["fire_cooldown"] = BULLET_COOLDOWN
         elif event.keysym == "r" and self.state["game_over"]:
             self.restart_game()
 
@@ -207,7 +212,7 @@ class Game:
 
         if "shoot" in self.keys and self.state["fire_cooldown"] <= 0:
             self.fire_player_bullet()
-            self.state["fire_cooldown"] = 170
+            self.state["fire_cooldown"] = BULLET_COOLDOWN
 
     def fire_player_bullet(self):
         self.state["bullets"].append(
