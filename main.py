@@ -41,6 +41,7 @@ class Game:
             "enemy_shot_timer": 0,
             "hit_flash": 0,
             "stars": [],
+            "effects": [],
             "message": "Press SPACE to start",
         }
 
@@ -128,6 +129,7 @@ class Game:
                 "fire_cooldown": 0,
                 "enemy_shot_timer": 0,
                 "hit_flash": 0,
+                "effects": [],
                 "message": "",
             }
         )
@@ -186,6 +188,7 @@ class Game:
         self.update_enemies()
         self.update_enemy_bullets()
         self.handle_collisions()
+        self.update_effects()
 
         if not self.state["enemies"]:
             self.state["level"] += 1
@@ -206,6 +209,31 @@ class Game:
             if star["y"] > HEIGHT:
                 star["y"] = -5
                 star["x"] = random.randint(0, WIDTH)
+
+    def spawn_explosion(self, x, y, color):
+        for _ in range(20):
+            self.state["effects"].append(
+                {
+                    "x": x,
+                    "y": y,
+                    "vx": random.uniform(-3.5, 3.5),
+                    "vy": random.uniform(-3.5, 3.5),
+                    "life": random.randint(18, 32),
+                    "size": random.randint(2, 6),
+                    "color": color,
+                }
+            )
+
+    def update_effects(self):
+        alive = []
+        for effect in self.state["effects"]:
+            effect["x"] += effect["vx"]
+            effect["y"] += effect["vy"]
+            effect["life"] -= 1
+            effect["vy"] += 0.08
+            if effect["life"] > 0:
+                alive.append(effect)
+        self.state["effects"] = alive
 
     def move_player(self):
         if "left" in self.keys:
@@ -307,6 +335,11 @@ class Game:
                     enemy["alive"] = False
                     bullet["y"] = -100
                     self.state["score"] += 10
+                    self.spawn_explosion(
+                        enemy["x"] + enemy["w"] / 2,
+                        enemy["y"] + enemy["h"] / 2,
+                        enemy["color"],
+                    )
                     self.play_sound("enemy_hit")
                     break
 
@@ -325,6 +358,7 @@ class Game:
                 ):
                     self.state["lives"] -= 1
                     self.state["hit_flash"] = 70
+                    self.spawn_explosion(self.state["player_x"], self.state["player_y"], "#ff8b4d")
                     self.play_sound("hit")
                     bullet["y"] = HEIGHT + 100
                     break
@@ -346,6 +380,7 @@ class Game:
         self.draw_player()
         self.draw_bullets()
         self.draw_enemies()
+        self.draw_effects()
         self.draw_hud()
 
     def draw_background(self):
@@ -406,6 +441,18 @@ class Game:
             self.canvas.create_oval(x + 5, y + 5, x + 10, y + 10, fill="#0a1430", outline="")
             self.canvas.create_oval(x + enemy["w"] - 10, y + 5, x + enemy["w"] - 5, y + 10, fill="#0a1430", outline="")
             self.canvas.create_rectangle(x + 8, y + enemy["h"] - 6, x + enemy["w"] - 8, y + enemy["h"] - 2, fill="#ffffff", outline="")
+
+    def draw_effects(self):
+        for effect in self.state["effects"]:
+            size = max(2, effect["size"] * (effect["life"] / 28))
+            self.canvas.create_oval(
+                effect["x"] - size,
+                effect["y"] - size,
+                effect["x"] + size,
+                effect["y"] + size,
+                fill=effect["color"],
+                outline="",
+            )
 
     def draw_hud(self):
         self.canvas.create_text(20, 18, anchor="w", text=f"Score: {self.state['score']}", fill="#dfeaff", font=("Courier", 16, "bold"))
